@@ -8,7 +8,72 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
+      - ./app:/app/app
+      - ./main.py:/app/main.py
+    command: >
+      sh -c "
+        echo 'Aguardando o banco de dados...' &&
+        while ! pg_isready -h db -U postgres -q; do
+          echo 'Aguardando conexão com o PostgreSQL...'
+          sleep 2
+        done &&
+        echo 'Banco de dados conectado!' &&
+        echo 'Aguardando mais 5 segundos para garantir que o banco está realmente pronto...' &&
+        sleep 5 &&
+        echo 'Inicializando o banco de dados e criando admin...' &&
+        python /app/create_admin.py &&
+        echo 'Iniciando a API...' &&
+        uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+      "
     environment:
       - PYTHONPATH=/app
-    restart: always 
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/mvp_db
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Interface Streamlit (se necessário)
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./app:/app/app
+      - ./streamlit_app.py:/app/streamlit_app.py
+    command: streamlit run streamlit_app.py
+    environment:
+      - PYTHONPATH=/app
+      - API_URL=http://api:8000
+    depends_on:
+      - api
+    restart: always
+
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=mvp_db
+    ports:
+      - "5432:5432"
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  postgres_data: 

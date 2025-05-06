@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     
     # Database
     DATABASE_URL: str = Field(
-        default="sqlite:///./sql_app.db", 
+        default=os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/mvp_db"), 
         description="Database connection string"
     )
     
