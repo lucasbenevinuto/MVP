@@ -16,10 +16,13 @@ def json_serial(obj):
 # Funções para interagir com a API
 def login(username: str, password: str) -> Optional[Dict]:
     try:
+        st.write(f"DEBUG - Tentando login com: {username}, {password}")
         response = requests.post(
             f"{API_URL}/login/access-token",
             data={"username": username, "password": password},
         )
+        st.write(f"DEBUG - Resposta: {response.status_code}")
+        st.write(f"DEBUG - Conteúdo: {response.text}")
         response.raise_for_status()
         return response.json()
     except requests.RequestException as e:

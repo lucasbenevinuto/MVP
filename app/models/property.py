@@ -49,6 +49,9 @@ class Property(BaseModel):
     # Relacionamentos
     project = relationship("Project", back_populates="properties")
     updates = relationship("PropertyUpdate", back_populates="property", cascade="all, delete-orphan")
+    contracts = relationship("Contract", back_populates="property", cascade="all, delete-orphan")
+    leads = relationship("Lead", back_populates="property", cascade="all, delete-orphan")
+    expenses = relationship("Expense", back_populates="property", cascade="all, delete-orphan")
 
 
 class PropertyUpdate(BaseModel):

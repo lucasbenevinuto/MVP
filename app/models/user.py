@@ -19,4 +19,5 @@ class User(BaseModel):
     company = relationship("Company", back_populates="users")
     teams = relationship("UserTeam", back_populates="user", cascade="all, delete-orphan")
     managed_teams = relationship("Team", back_populates="manager", cascade="all, delete-orphan")
-    managed_projects = relationship("Project", back_populates="manager", cascade="all, delete-orphan") 
+    managed_projects = relationship("Project", back_populates="manager", cascade="all, delete-orphan")
+    assigned_leads = relationship("Lead", back_populates="assigned_user") 

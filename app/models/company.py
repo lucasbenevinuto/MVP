@@ -17,4 +17,5 @@ class Company(BaseModel):
     # Relacionamentos
     users = relationship("User", back_populates="company", cascade="all, delete-orphan")
     teams = relationship("Team", back_populates="company", cascade="all, delete-orphan")
-    projects = relationship("Project", back_populates="company", cascade="all, delete-orphan") 
+    projects = relationship("Project", back_populates="company", cascade="all, delete-orphan")
+    clients = relationship("Client", back_populates="company", cascade="all, delete-orphan") 

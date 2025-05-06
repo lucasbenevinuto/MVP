@@ -9,6 +9,7 @@ from app.db.init_db import init_db
 # Inicializa o banco de dados
 init_db()
 
+
 app = FastAPI(
     title="API de Gestão de Projetos Imobiliários",
     description="API para gerenciamento de projetos e imóveis para construtoras",

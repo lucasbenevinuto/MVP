@@ -13,4 +13,18 @@ from app.schemas.property import (
     Property, PropertyCreate, PropertyUpdate,
     PropertyUpdateCreate, PropertyUpdateUpdate,
     PropertyTypeEnum, PropertyStatusEnum
+)
+from app.schemas.contract import (
+    Contract, ContractCreate, ContractUpdate,
+    ContractDocument, ContractDocumentCreate, ContractDocumentUpdate,
+    ContractTypeEnum, ContractStatusEnum
+)
+from app.schemas.expense import (
+    Expense, ExpenseCreate, ExpenseUpdate,
+    ExpenseCategoryEnum
+)
+from app.schemas.client import (
+    Client, ClientCreate, ClientUpdate,
+    Lead, LeadCreate, LeadUpdate,
+    ClientTypeEnum, LeadStatusEnum
 ) 

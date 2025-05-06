@@ -14,4 +14,20 @@ from app.models.property import (
     PropertyUpdate, 
     PropertyType,
     PropertyStatus
+)
+from app.models.client import (
+    Client,
+    ClientType,
+    Lead,
+    LeadStatus
+)
+from app.models.contract import (
+    Contract,
+    ContractDocument,
+    ContractType,
+    ContractStatus
+)
+from app.models.expense import (
+    Expense,
+    ExpenseCategory
 ) 

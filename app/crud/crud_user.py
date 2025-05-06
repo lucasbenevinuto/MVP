@@ -73,5 +73,10 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     def get_company_users(self, db: Session, *, company_id: int, skip: int = 0, limit: int = 100) -> List[User]:
         return db.query(User).filter(User.company_id == company_id).offset(skip).limit(limit).all()
 
+    def verify_password(self, password: str, hashed_password: str) -> bool:
+        """Verifica se a senha corresponde ao hash armazenado."""
+        from app.core.security import verify_password as verify_pwd
+        return verify_pwd(password, hashed_password)
+
 
 user = CRUDUser(User) 

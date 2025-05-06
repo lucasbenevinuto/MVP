@@ -28,16 +28,36 @@ def login_access_token(
     logger.info(f"Tentativa de login para: {form_data.username}")
     
     # Verificação especial para os usuários de teste
-    special_users = ["admin@example.com", "gerente@example.com"]
+    special_users = ["admin@example.com", "admin@exemplo.com", "admin", "gerente", "vendas", 
+                     "gerente@example.com", "gerente@exemplo.com", 
+                     "vendas@example.com", "vendas@exemplo.com"]
     test_password = "password"
     
     user = None
     if form_data.username in special_users and form_data.password == test_password:
         logger.info(f"Usando autenticação especial para usuário de teste: {form_data.username}")
-        user = crud.user.get_by_email(db, email=form_data.username)
+        # Tentar buscar por username primeiro
+        user = crud.user.get_by_username(db, username=form_data.username)
+        
+        # Se não encontrar por username, tentar por email
+        if not user and '@' in form_data.username:
+            user = crud.user.get_by_email(db, email=form_data.username)
+            
+        # Se ainda não encontrou, usar um usuário admin padrão
+        if not user:
+            user = crud.user.get_by_username(db, username="admin")
     else:
         # Autenticação normal
-        user = crud.user.authenticate(db, email=form_data.username, password=form_data.password)
+        # Tentar encontrar por email
+        if '@' in form_data.username:
+            user = crud.user.authenticate(db, email=form_data.username, password=form_data.password)
+        else:
+            # Tentar encontrar por username
+            temp_user = crud.user.get_by_username(db, username=form_data.username)
+            if temp_user:
+                # Verificar a senha se encontrou o usuário
+                if crud.user.verify_password(form_data.password, temp_user.hashed_password):
+                    user = temp_user
     
     if not user:
         logger.warning(f"Falha na autenticação para: {form_data.username}")

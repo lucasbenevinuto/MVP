@@ -38,6 +38,7 @@ class Project(BaseModel):
     properties = relationship("Property", back_populates="project", cascade="all, delete-orphan")
     tasks = relationship("ProjectTask", back_populates="project", cascade="all, delete-orphan")
     updates = relationship("ProjectUpdate", back_populates="project", cascade="all, delete-orphan")
+    expenses = relationship("Expense", back_populates="project", cascade="all, delete-orphan")
 
 
 class TeamProject(BaseModel):
