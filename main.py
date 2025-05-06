@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
 from app.api.api import api_router
 from app.core.config import settings
@@ -13,6 +14,9 @@ app = FastAPI(
     description="API para gerenciamento de projetos e imóveis para construtoras",
     version="0.1.0",
 )
+
+
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Configure CORS
 app.add_middleware(
@@ -40,4 +44,4 @@ async def print_message():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True) 
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True, timeout_keep_alive=65) 
