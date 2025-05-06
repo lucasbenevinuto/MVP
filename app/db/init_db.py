@@ -1,7 +1,7 @@
 import logging
 from sqlalchemy.orm import Session
 
-from app.db.base import Base
+from app.db.base_class import Base
 from app.db.session import engine
 import app.models  # Importa todos os modelos para que o SQLAlchemy os registre
 

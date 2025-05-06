@@ -34,6 +34,10 @@ async def root():
 async def health_check():
     return {"status": "healthy"}
 
+@app.get("/print")
+async def print_message():
+    return {"message": "Hello, World!"}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True) 
