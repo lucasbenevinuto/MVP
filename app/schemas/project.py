@@ -1,4 +1,5 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
+from datetime import datetime
 from typing import Optional, List, Union
 from datetime import date
 from enum import Enum
@@ -48,6 +49,12 @@ class ProjectUpdate(BaseModel):
     status: Optional[ProjectStatusEnum] = None
     company_id: Optional[int] = None
     manager_id: Optional[int] = None
+
+    @validator('start_date', 'expected_end_date', 'actual_end_date', pre=True)
+    def parse_date(cls, value):
+        if isinstance(value, str):
+            return datetime.strptime(value, '%Y-%m-%d').date()
+        return value
 
 
 class ProjectInDBBase(ProjectBase):
