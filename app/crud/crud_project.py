@@ -1,3 +1,4 @@
+from datetime import date
 from typing import List, Optional, Dict, Any, Union
 
 from sqlalchemy.orm import Session
@@ -20,6 +21,39 @@ class CRUDProject(CRUDBase[Project, ProjectCreate, ProjectUpdateSchema]):
     
     def get_manager_projects(self, db: Session, *, manager_id: int, skip: int = 0, limit: int = 100) -> List[Project]:
         return db.query(Project).filter(Project.manager_id == manager_id).offset(skip).limit(limit).all()
+
+    def create(self, db: Session, *, obj_in: ProjectCreate) -> Project:
+        db_obj = Project(
+            name=obj_in.name,
+            description=obj_in.description,
+            address=obj_in.address,
+            city=obj_in.city,
+            state=obj_in.state,
+            zip_code=obj_in.zip_code,
+            total_area=obj_in.total_area,
+            budget=obj_in.budget,
+            start_date=obj_in.start_date,
+            expected_end_date=obj_in.expected_end_date,
+            actual_end_date=obj_in.actual_end_date,
+            status=obj_in.status,
+            company_id=obj_in.company_id,
+            manager_id=obj_in.manager_id,
+        )
+        db.add(db_obj)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
+
+    def update(self, db: Session, *, db_obj: Project, obj_in: Union[ProjectUpdateSchema, Dict[str, Any]]) -> Project:
+        update_data = obj_in.dict(exclude_unset=True)
+
+    # conversão explícita para tipos esperados (se vierem como string)
+        for campo in ["start_date", "expected_end_date", "actual_end_date"]:
+            if campo in update_data and isinstance(update_data[campo], str):
+                update_data[campo] = date.fromisoformat(update_data[campo])
+
+        return super().update(db, db_obj=db_obj, obj_in=update_data)
+
 
 
 class CRUDTeamProject(CRUDBase[TeamProject, TeamProjectCreate, TeamProjectCreate]):

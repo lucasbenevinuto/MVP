@@ -37,13 +37,19 @@ def create_project(
     """
     Create new project.
     """
+    print("\n📥 [POST] Novo projeto recebido")
+    print("📄 Payload:", project_in.dict())
+    print("👤 Usuário autenticado:", current_user.email, "| ID:", current_user.id)
+
     # Check if user has permission to create project for this company
     if not crud.user.is_superuser(current_user) and current_user.company_id != project_in.company_id:
+        print("⛔ Permissão negada para a empresa:", project_in.company_id)
         raise HTTPException(status_code=400, detail="Not enough permissions")
     
     # Check if project with same name already exists in company
     project = crud.project.get_by_name_and_company(db, name=project_in.name, company_id=project_in.company_id)
     if project:
+        print("⚠️ Projeto já existe:", project.name)
         raise HTTPException(
             status_code=400,
             detail="The project with this name already exists in the company.",
@@ -52,12 +58,16 @@ def create_project(
     # Verify manager exists
     manager = crud.user.get(db, id=project_in.manager_id)
     if not manager:
+        print("❌ Gerente não encontrado com ID:", project_in.manager_id)
         raise HTTPException(status_code=404, detail="Manager not found")
     if manager.company_id != project_in.company_id:
+        print("❌ Empresa do gerente diferente da empresa do projeto.")
         raise HTTPException(status_code=400, detail="Manager must belong to the same company")
     
     project = crud.project.create(db, obj_in=project_in)
+    print("✅ Projeto criado com sucesso:", project.name)
     return project
+
 
 
 @router.get("/{project_id}", response_model=schemas.Project)
@@ -92,6 +102,10 @@ def update_project(
     """
     Update a project.
     """
+
+    print("\n🛠 Dados recebidos no PUT:")
+    print(project_in.dict())
+    
     project = crud.project.get(db, id=project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
