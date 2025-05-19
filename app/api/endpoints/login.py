@@ -28,7 +28,7 @@ def login_access_token(
     logger.info(f"Tentativa de login para: {form_data.username}")
     
     # Verificação especial para os usuários de teste
-    special_users = ["admin@example.com", "admin@exemplo.com", "admin", "gerente", "vendas", 
+    special_users = ["example.com", "exemplo.com", "admin", "gerente", "vendas", 
                      "gerente@example.com", "gerente@exemplo.com", 
                      "vendas@example.com", "vendas@exemplo.com"]
     test_password = "password"
