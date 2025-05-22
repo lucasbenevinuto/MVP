@@ -495,34 +495,39 @@ def _add_new_data(db: Session):
     db.add(lead1)
     db.flush()
     
-    # 3. Contratos
-    contract1 = Contract(
-        contract_number="CONT-2023-001",
-        type=ContractType.SALE,
-        description="Contrato de venda",
-        client_id=client1.id,
-        property_id=property.id,
-        signing_date=datetime.date(2023, 3, 18),
-        expiration_date=datetime.date(2024, 3, 18),
-        contract_value=350000.0,
-        status=ContractStatus.ACTIVE,
-        notes="Contrato assinado com financiamento bancário"
-    )
-    
-    db.add(contract1)
-    db.flush()
-    
-    # 4. Documentos de Contrato
-    contract_doc1 = ContractDocument(
-        filename="contrato_venda.pdf",
-        description="Contrato de venda assinado",
-        file_type="application/pdf",
-        file_path="/documents/contracts/2023/001/contrato.pdf",
-        contract_id=contract1.id
-    )
-    
-    db.add(contract_doc1)
-    db.flush()
+    # 3. Contratos - Verificar se já existe
+    existing_contract = db.query(Contract).filter(Contract.contract_number == "CONT-2023-001").first()
+    if not existing_contract:
+        contract1 = Contract(
+            contract_number="CONT-2023-001",
+            type=ContractType.SALE,
+            description="Contrato de venda",
+            client_id=client1.id,
+            property_id=property.id,
+            signing_date=datetime.date(2023, 3, 18),
+            expiration_date=datetime.date(2024, 3, 18),
+            contract_value=350000.0,
+            status=ContractStatus.ACTIVE,
+            notes="Contrato assinado com financiamento bancário"
+        )
+        
+        db.add(contract1)
+        db.flush()
+        
+        # 4. Documentos de Contrato
+        contract_doc1 = ContractDocument(
+            filename="contrato_venda.pdf",
+            description="Contrato de venda assinado",
+            file_type="application/pdf",
+            file_path="/documents/contracts/2023/001/contrato.pdf",
+            contract_id=contract1.id
+        )
+        
+        db.add(contract_doc1)
+        db.flush()
+    else:
+        logger.info(f"Contrato com número CONT-2023-001 já existe, pulando criação.")
+        contract1 = existing_contract
     
     # 5. Despesas
     expense1 = Expense(
