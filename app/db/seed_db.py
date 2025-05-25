@@ -1,6 +1,7 @@
 import logging
 import datetime
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from app.db.session import SessionLocal
 from app.models import (
@@ -12,6 +13,38 @@ from app.models import (
 )
 
 logger = logging.getLogger(__name__)
+
+def _generate_unique_contract_number(db: Session) -> str:
+    """Gera um número de contrato único verificando o último número usado"""
+    # Busca o último contrato pelo número
+    last_contract = db.query(Contract).order_by(Contract.contract_number.desc()).first()
+    
+    current_year = datetime.datetime.now().year
+    
+    if last_contract:
+        try:
+            # Extrai o número do último contrato
+            last_number = int(last_contract.contract_number.split('-')[-1])
+            # Extrai o ano do último contrato
+            last_year = int(last_contract.contract_number.split('-')[1])
+            
+            # Se mudou o ano, começa do 001
+            if last_year != current_year:
+                next_number = 1
+            else:
+                next_number = last_number + 1
+        except (ValueError, IndexError):
+            # Se houver erro na extração, começa do 001
+            next_number = 1
+    else:
+        next_number = 1
+    
+    # Formata o novo número de contrato
+    return f"CONT-{current_year}-{str(next_number).zfill(3)}"
+
+def _contract_exists(db: Session, contract_number: str) -> bool:
+    """Verifica se um contrato já existe pelo número"""
+    return db.query(Contract).filter(Contract.contract_number == contract_number).first() is not None
 
 def seed_db():
     """Semeia o banco de dados com dados de exemplo"""
@@ -332,8 +365,9 @@ def _add_sample_data(db: Session):
     db.flush()
     
     # 11. Contratos (Nova tabela)
+    contract_number = _generate_unique_contract_number(db)
     contract1 = Contract(
-        contract_number="CONT-2023-001",
+        contract_number=contract_number,
         type=ContractType.SALE,
         description="Contrato de venda do Apartamento 101",
         client_id=client1.id,
@@ -495,11 +529,11 @@ def _add_new_data(db: Session):
     db.add(lead1)
     db.flush()
     
-    # 3. Contratos - Verificar se já existe
-    existing_contract = db.query(Contract).filter(Contract.contract_number == "CONT-2023-001").first()
-    if not existing_contract:
+    # 3. Contratos
+    contract_number = _generate_unique_contract_number(db)
+    if not _contract_exists(db, contract_number):
         contract1 = Contract(
-            contract_number="CONT-2023-001",
+            contract_number=contract_number,
             type=ContractType.SALE,
             description="Contrato de venda",
             client_id=client1.id,
@@ -513,21 +547,18 @@ def _add_new_data(db: Session):
         
         db.add(contract1)
         db.flush()
-        
-        # 4. Documentos de Contrato
-        contract_doc1 = ContractDocument(
-            filename="contrato_venda.pdf",
-            description="Contrato de venda assinado",
-            file_type="application/pdf",
-            file_path="/documents/contracts/2023/001/contrato.pdf",
-            contract_id=contract1.id
-        )
-        
-        db.add(contract_doc1)
-        db.flush()
-    else:
-        logger.info(f"Contrato com número CONT-2023-001 já existe, pulando criação.")
-        contract1 = existing_contract
+    
+    # 4. Documentos de Contrato
+    contract_doc1 = ContractDocument(
+        filename="contrato_venda.pdf",
+        description="Contrato de venda assinado",
+        file_type="application/pdf",
+        file_path="/documents/contracts/2023/001/contrato.pdf",
+        contract_id=contract1.id
+    )
+    
+    db.add(contract_doc1)
+    db.flush()
     
     # 5. Despesas
     expense1 = Expense(
