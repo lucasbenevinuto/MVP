@@ -145,5 +145,5 @@ class ProjectUpdateInDBBase(ProjectUpdateBase):
         from_attributes = True
 
 
-class ProjectUpdate(ProjectUpdateInDBBase):
+class ProjectUpdateNotification(ProjectUpdateInDBBase):
     pass 

@@ -422,7 +422,7 @@ def delete_project_task(
     return task
 
 
-@router.get("/{project_id}/updates/", response_model=List[schemas.ProjectUpdate])
+@router.get("/{project_id}/updates/", response_model=List[schemas.ProjectUpdateNotification])
 def read_project_updates(
     *,
     db: Session = Depends(deps.get_db),
@@ -446,7 +446,7 @@ def read_project_updates(
     return updates
 
 
-@router.post("/{project_id}/updates/", response_model=schemas.ProjectUpdate)
+@router.post("/{project_id}/updates/", response_model=schemas.ProjectUpdateNotification)
 def create_project_update(
     *,
     db: Session = Depends(deps.get_db),

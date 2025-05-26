@@ -7,7 +7,7 @@ from app.schemas.project import (
     Project, ProjectCreate, ProjectUpdate,
     TeamProject, TeamProjectCreate,
     ProjectTask, ProjectTaskCreate, ProjectTaskUpdate,
-    ProjectUpdate, ProjectUpdateCreate, ProjectUpdateUpdate,
+    ProjectUpdateNotification, ProjectUpdateCreate, ProjectUpdateUpdate,
     ProjectStatusEnum
 )
 from app.schemas.property import (
