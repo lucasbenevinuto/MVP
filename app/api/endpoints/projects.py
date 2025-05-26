@@ -148,27 +148,6 @@ def update_project(
     """
     Update a project.
     """
-    # Create project_in object from form fields
-    project_in = schemas.ProjectUpdate(
-        name=name,
-        description=description,
-        address=address,
-        city=city,
-        state=state,
-        zip_code=zip_code,
-        total_area=total_area,
-        budget=budget,
-        start_date=start_date,
-        expected_end_date=expected_end_date,
-        actual_end_date=actual_end_date,
-        status=status,
-        company_id=company_id,
-        manager_id=manager_id,
-    )
-
-    print("\n🛠 Dados recebidos no PUT:")
-    print(project_in.dict())
-    
     project = crud.project.get(db, id=project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -176,6 +155,40 @@ def update_project(
     # Check if user has permission to update this project
     if not crud.user.is_superuser(current_user) and project.company_id != current_user.company_id:
         raise HTTPException(status_code=400, detail="Not enough permissions")
+    
+    # Create update data dictionary with only provided values
+    update_data = {}
+    if name is not None:
+        update_data["name"] = name
+    if description is not None:
+        update_data["description"] = description
+    if address is not None:
+        update_data["address"] = address
+    if city is not None:
+        update_data["city"] = city
+    if state is not None:
+        update_data["state"] = state
+    if zip_code is not None:
+        update_data["zip_code"] = zip_code
+    if total_area is not None:
+        update_data["total_area"] = total_area
+    if budget is not None:
+        update_data["budget"] = budget
+    if start_date is not None:
+        update_data["start_date"] = start_date
+    if expected_end_date is not None:
+        update_data["expected_end_date"] = expected_end_date
+    if actual_end_date is not None:
+        update_data["actual_end_date"] = actual_end_date
+    if status is not None:
+        update_data["status"] = status
+    if company_id is not None:
+        update_data["company_id"] = company_id
+    if manager_id is not None:
+        update_data["manager_id"] = manager_id
+    
+    # Create project_in object from update data
+    project_in = schemas.ProjectUpdate(**update_data)
     
     # If changing manager, verify new manager exists
     if project_in.manager_id and project_in.manager_id != project.manager_id:
