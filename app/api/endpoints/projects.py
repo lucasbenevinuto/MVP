@@ -1,6 +1,7 @@
-from typing import Any, List
+from typing import Any, List, Optional
+from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Form
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
@@ -31,13 +32,45 @@ def read_projects(
 def create_project(
     *,
     db: Session = Depends(deps.get_db),
-    project_in: schemas.ProjectCreate,
+    name: str = Form(...),
+    description: Optional[str] = Form(None),
+    address: Optional[str] = Form(None),
+    city: Optional[str] = Form(None),
+    state: Optional[str] = Form(None),
+    zip_code: Optional[str] = Form(None),
+    total_area: Optional[float] = Form(None),
+    budget: Optional[float] = Form(None),
+    start_date: Optional[date] = Form(None),
+    expected_end_date: Optional[date] = Form(None),
+    actual_end_date: Optional[date] = Form(None),
+    status: Optional[schemas.ProjectStatusEnum] = Form(None),
+    company_id: int = Form(...),
+    manager_id: int = Form(...),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
     Create new project.
     """
     print("\n📥 [POST] Novo projeto recebido")
+    
+    # Create project_in object from form fields
+    project_in = schemas.ProjectCreate(
+        name=name,
+        description=description,
+        address=address,
+        city=city,
+        state=state,
+        zip_code=zip_code,
+        total_area=total_area,
+        budget=budget,
+        start_date=start_date,
+        expected_end_date=expected_end_date,
+        actual_end_date=actual_end_date,
+        status=status,
+        company_id=company_id,
+        manager_id=manager_id,
+    )
+    
     print("📄 Payload:", project_in.dict())
     print("👤 Usuário autenticado:", current_user.email, "| ID:", current_user.id)
 
@@ -96,12 +129,42 @@ def update_project(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    project_in: schemas.ProjectUpdate,
+    name: Optional[str] = Form(None),
+    description: Optional[str] = Form(None),
+    address: Optional[str] = Form(None),
+    city: Optional[str] = Form(None),
+    state: Optional[str] = Form(None),
+    zip_code: Optional[str] = Form(None),
+    total_area: Optional[float] = Form(None),
+    budget: Optional[float] = Form(None),
+    start_date: Optional[date] = Form(None),
+    expected_end_date: Optional[date] = Form(None),
+    actual_end_date: Optional[date] = Form(None),
+    status: Optional[schemas.ProjectStatusEnum] = Form(None),
+    company_id: Optional[int] = Form(None),
+    manager_id: Optional[int] = Form(None),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
     Update a project.
     """
+    # Create project_in object from form fields
+    project_in = schemas.ProjectUpdate(
+        name=name,
+        description=description,
+        address=address,
+        city=city,
+        state=state,
+        zip_code=zip_code,
+        total_area=total_area,
+        budget=budget,
+        start_date=start_date,
+        expected_end_date=expected_end_date,
+        actual_end_date=actual_end_date,
+        status=status,
+        company_id=company_id,
+        manager_id=manager_id,
+    )
 
     print("\n🛠 Dados recebidos no PUT:")
     print(project_in.dict())
@@ -388,7 +451,9 @@ def create_project_update(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    update_in: schemas.ProjectUpdateCreate,
+    title: str = Form(...),
+    description: str = Form(...),
+    user_id: Optional[int] = Form(None),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
@@ -402,9 +467,13 @@ def create_project_update(
     if not crud.user.is_superuser(current_user) and project.company_id != current_user.company_id:
         raise HTTPException(status_code=400, detail="Not enough permissions")
     
-    # Make sure the update is for the right project
-    if update_in.project_id != project_id:
-        raise HTTPException(status_code=400, detail="Update must be for this project")
+    # Create update_in object from form fields
+    update_in = schemas.ProjectUpdateCreate(
+        project_id=project_id,
+        title=title,
+        description=description,
+        user_id=user_id,
+    )
     
     # Set current user as author if not specified
     if not update_in.user_id:

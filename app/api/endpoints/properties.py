@@ -1,6 +1,7 @@
-from typing import Any, List
+from typing import Any, List, Optional
+from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Form
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
@@ -50,12 +51,55 @@ def read_properties(
 def create_property(
     *,
     db: Session = Depends(deps.get_db),
-    property_in: schemas.PropertyCreate,
+    name: str = Form(...),
+    description: Optional[str] = Form(None),
+    type: schemas.PropertyTypeEnum = Form(...),
+    status: schemas.PropertyStatusEnum = Form(...),
+    address: Optional[str] = Form(None),
+    unit_number: Optional[str] = Form(None),
+    floor: Optional[int] = Form(None),
+    area: Optional[float] = Form(None),
+    bedrooms: Optional[int] = Form(None),
+    bathrooms: Optional[int] = Form(None),
+    garage_spots: Optional[int] = Form(None),
+    price: Optional[float] = Form(None),
+    construction_cost: Optional[float] = Form(None),
+    start_date: Optional[date] = Form(None),
+    expected_completion_date: Optional[date] = Form(None),
+    actual_completion_date: Optional[date] = Form(None),
+    is_sold: Optional[bool] = Form(None),
+    sale_date: Optional[date] = Form(None),
+    sale_price: Optional[float] = Form(None),
+    project_id: int = Form(...),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
     Create new property.
     """
+    # Create property_in object from form fields
+    property_in = schemas.PropertyCreate(
+        name=name,
+        description=description,
+        type=type,
+        status=status,
+        address=address,
+        unit_number=unit_number,
+        floor=floor,
+        area=area,
+        bedrooms=bedrooms,
+        bathrooms=bathrooms,
+        garage_spots=garage_spots,
+        price=price,
+        construction_cost=construction_cost,
+        start_date=start_date,
+        expected_completion_date=expected_completion_date,
+        actual_completion_date=actual_completion_date,
+        is_sold=is_sold,
+        sale_date=sale_date,
+        sale_price=sale_price,
+        project_id=project_id,
+    )
+
     # Verify project exists
     project = crud.project.get(db, id=property_in.project_id)
     if not project:
@@ -110,7 +154,26 @@ def update_property(
     *,
     db: Session = Depends(deps.get_db),
     property_id: int,
-    property_in: schemas.PropertyUpdate,
+    name: Optional[str] = Form(None),
+    description: Optional[str] = Form(None),
+    type: Optional[schemas.PropertyTypeEnum] = Form(None),
+    status: Optional[schemas.PropertyStatusEnum] = Form(None),
+    address: Optional[str] = Form(None),
+    unit_number: Optional[str] = Form(None),
+    floor: Optional[int] = Form(None),
+    area: Optional[float] = Form(None),
+    bedrooms: Optional[int] = Form(None),
+    bathrooms: Optional[int] = Form(None),
+    garage_spots: Optional[int] = Form(None),
+    price: Optional[float] = Form(None),
+    construction_cost: Optional[float] = Form(None),
+    start_date: Optional[date] = Form(None),
+    expected_completion_date: Optional[date] = Form(None),
+    actual_completion_date: Optional[date] = Form(None),
+    is_sold: Optional[bool] = Form(None),
+    sale_date: Optional[date] = Form(None),
+    sale_price: Optional[float] = Form(None),
+    project_id: Optional[int] = Form(None),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
@@ -128,6 +191,30 @@ def update_property(
     # Check if user has permission to update this property
     if not crud.user.is_superuser(current_user) and project.company_id != current_user.company_id:
         raise HTTPException(status_code=400, detail="Not enough permissions")
+    
+    # Create property_in object from form fields
+    property_in = schemas.PropertyUpdate(
+        name=name,
+        description=description,
+        type=type,
+        status=status,
+        address=address,
+        unit_number=unit_number,
+        floor=floor,
+        area=area,
+        bedrooms=bedrooms,
+        bathrooms=bathrooms,
+        garage_spots=garage_spots,
+        price=price,
+        construction_cost=construction_cost,
+        start_date=start_date,
+        expected_completion_date=expected_completion_date,
+        actual_completion_date=actual_completion_date,
+        is_sold=is_sold,
+        sale_date=sale_date,
+        sale_price=sale_price,
+        project_id=project_id,
+    )
     
     # If changing project, verify new project exists and user has permission
     if property_in.project_id and property_in.project_id != property.project_id:

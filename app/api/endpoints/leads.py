@@ -1,6 +1,6 @@
-from typing import Any, List
+from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Form
 from sqlalchemy.orm import Session
 from datetime import date
 
@@ -32,12 +32,37 @@ def read_leads(
 def create_lead(
     *,
     db: Session = Depends(deps.get_db),
-    lead_in: schemas.LeadCreate,
+    client_id: int = Form(...),
+    property_id: int = Form(...),
+    status: schemas.LeadStatusEnum = Form(...),
+    first_contact_date: Optional[date] = Form(None),
+    last_contact_date: Optional[date] = Form(None),
+    next_contact_date: Optional[date] = Form(None),
+    visit_date: Optional[date] = Form(None),
+    interest_level: Optional[int] = Form(None),
+    budget: Optional[float] = Form(None),
+    notes: Optional[str] = Form(None),
+    assigned_user_id: Optional[int] = Form(None),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
     Create new lead.
     """
+    # Create lead_in object from form fields
+    lead_in = schemas.LeadCreate(
+        client_id=client_id,
+        property_id=property_id,
+        status=status,
+        first_contact_date=first_contact_date,
+        last_contact_date=last_contact_date,
+        next_contact_date=next_contact_date,
+        visit_date=visit_date,
+        interest_level=interest_level,
+        budget=budget,
+        notes=notes,
+        assigned_user_id=assigned_user_id,
+    )
+
     # Verify property exists
     property = crud.property.get(db, id=lead_in.property_id)
     if not property:
@@ -115,7 +140,15 @@ def update_lead(
     *,
     db: Session = Depends(deps.get_db),
     lead_id: int,
-    lead_in: schemas.LeadUpdate,
+    status: Optional[schemas.LeadStatusEnum] = Form(None),
+    first_contact_date: Optional[date] = Form(None),
+    last_contact_date: Optional[date] = Form(None),
+    next_contact_date: Optional[date] = Form(None),
+    visit_date: Optional[date] = Form(None),
+    interest_level: Optional[int] = Form(None),
+    budget: Optional[float] = Form(None),
+    notes: Optional[str] = Form(None),
+    assigned_user_id: Optional[int] = Form(None),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
@@ -133,6 +166,19 @@ def update_lead(
     # Check if user has permission to update this lead
     if not crud.user.is_superuser(current_user) and client.company_id != current_user.company_id:
         raise HTTPException(status_code=400, detail="Not enough permissions")
+    
+    # Create lead_in object from form fields
+    lead_in = schemas.LeadUpdate(
+        status=status,
+        first_contact_date=first_contact_date,
+        last_contact_date=last_contact_date,
+        next_contact_date=next_contact_date,
+        visit_date=visit_date,
+        interest_level=interest_level,
+        budget=budget,
+        notes=notes,
+        assigned_user_id=assigned_user_id,
+    )
     
     # If changing assigned user, verify user exists and belongs to the company
     if lead_in.assigned_user_id and lead_in.assigned_user_id != lead.assigned_user_id:

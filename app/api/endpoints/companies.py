@@ -1,6 +1,6 @@
-from typing import Any, List
+from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Form
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
@@ -27,12 +27,31 @@ def read_companies(
 def create_company(
     *,
     db: Session = Depends(deps.get_db),
-    company_in: schemas.CompanyCreate,
+    name: str = Form(...),
+    document: str = Form(...),
+    email: str = Form(...),
+    phone: str = Form(...),
+    address: str = Form(...),
+    city: str = Form(...),
+    state: str = Form(...),
+    zip_code: str = Form(...),
     current_user: models.User = Depends(deps.get_current_active_superuser),
 ) -> Any:
     """
     Create new company.
     """
+    # Create company_in object from form fields
+    company_in = schemas.CompanyCreate(
+        name=name,
+        document=document,
+        email=email,
+        phone=phone,
+        address=address,
+        city=city,
+        state=state,
+        zip_code=zip_code,
+    )
+
     company = crud.company.get_by_document(db, document=company_in.document)
     if company:
         raise HTTPException(
@@ -64,7 +83,14 @@ def update_company(
     *,
     db: Session = Depends(deps.get_db),
     company_id: int,
-    company_in: schemas.CompanyUpdate,
+    name: Optional[str] = Form(None),
+    document: Optional[str] = Form(None),
+    email: Optional[str] = Form(None),
+    phone: Optional[str] = Form(None),
+    address: Optional[str] = Form(None),
+    city: Optional[str] = Form(None),
+    state: Optional[str] = Form(None),
+    zip_code: Optional[str] = Form(None),
     current_user: models.User = Depends(deps.get_current_active_superuser),
 ) -> Any:
     """
@@ -73,6 +99,19 @@ def update_company(
     company = crud.company.get(db, id=company_id)
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
+
+    # Create company_in object from form fields
+    company_in = schemas.CompanyUpdate(
+        name=name,
+        document=document,
+        email=email,
+        phone=phone,
+        address=address,
+        city=city,
+        state=state,
+        zip_code=zip_code,
+    )
+
     company = crud.company.update(db, db_obj=company, obj_in=company_in)
     return company
 

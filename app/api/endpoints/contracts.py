@@ -1,4 +1,5 @@
-from typing import Any, List
+from typing import Any, List, Optional
+from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
@@ -33,12 +34,35 @@ def read_contracts(
 def create_contract(
     *,
     db: Session = Depends(deps.get_db),
-    contract_in: schemas.ContractCreate,
+    contract_number: str = Form(...),
+    type: schemas.ContractTypeEnum = Form(...),
+    description: Optional[str] = Form(None),
+    client_id: int = Form(...),
+    property_id: int = Form(...),
+    signing_date: date = Form(...),
+    expiration_date: Optional[date] = Form(None),
+    contract_value: float = Form(...),
+    status: Optional[schemas.ContractStatusEnum] = Form(None),
+    notes: Optional[str] = Form(None),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
     Create new contract.
     """
+    # Create contract_in object from form fields
+    contract_in = schemas.ContractCreate(
+        contract_number=contract_number,
+        type=type,
+        description=description,
+        client_id=client_id,
+        property_id=property_id,
+        signing_date=signing_date,
+        expiration_date=expiration_date,
+        contract_value=contract_value,
+        status=status,
+        notes=notes,
+    )
+
     # Verify property exists
     property = crud.property.get(db, id=contract_in.property_id)
     if not property:
@@ -109,7 +133,16 @@ def update_contract(
     *,
     db: Session = Depends(deps.get_db),
     contract_id: int,
-    contract_in: schemas.ContractUpdate,
+    contract_number: Optional[str] = Form(None),
+    type: Optional[schemas.ContractTypeEnum] = Form(None),
+    description: Optional[str] = Form(None),
+    client_id: Optional[int] = Form(None),
+    property_id: Optional[int] = Form(None),
+    signing_date: Optional[date] = Form(None),
+    expiration_date: Optional[date] = Form(None),
+    contract_value: Optional[float] = Form(None),
+    status: Optional[schemas.ContractStatusEnum] = Form(None),
+    notes: Optional[str] = Form(None),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
@@ -131,6 +164,20 @@ def update_contract(
     # Check if user has permission to update this contract
     if not crud.user.is_superuser(current_user) and project.company_id != current_user.company_id:
         raise HTTPException(status_code=400, detail="Not enough permissions")
+    
+    # Create contract_in object from form fields
+    contract_in = schemas.ContractUpdate(
+        contract_number=contract_number,
+        type=type,
+        description=description,
+        client_id=client_id,
+        property_id=property_id,
+        signing_date=signing_date,
+        expiration_date=expiration_date,
+        contract_value=contract_value,
+        status=status,
+        notes=notes,
+    )
     
     # If changing property, verify new property exists and user has permission
     if contract_in.property_id and contract_in.property_id != contract.property_id:

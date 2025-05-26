@@ -1,6 +1,6 @@
-from typing import Any, List
+from typing import Any, List, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException, Form
 from fastapi.encoders import jsonable_encoder
 from pydantic import EmailStr
 from sqlalchemy.orm import Session
@@ -30,11 +30,24 @@ def read_users(
 def create_user(
     *,
     db: Session = Depends(deps.get_db),
-    user_in: schemas.UserCreate,
+    email: EmailStr = Form(...),
+    password: str = Form(...),
+    full_name: str = Form(...),
+    company_id: Optional[int] = Form(None),
+    is_superuser: bool = Form(False),
 ) -> Any:
     """
     Create new user.
     """
+    # Create user_in object from form fields
+    user_in = schemas.UserCreate(
+        email=email,
+        password=password,
+        full_name=full_name,
+        company_id=company_id,
+        is_superuser=is_superuser,
+    )
+
     user = crud.user.get_by_email(db, email=user_in.email)
     if user:
         raise HTTPException(
@@ -104,7 +117,11 @@ def update_user(
     *,
     db: Session = Depends(deps.get_db),
     user_id: int,
-    user_in: schemas.UserUpdate,
+    email: Optional[EmailStr] = Form(None),
+    password: Optional[str] = Form(None),
+    full_name: Optional[str] = Form(None),
+    company_id: Optional[int] = Form(None),
+    is_superuser: Optional[bool] = Form(None),
     current_user: models.User = Depends(deps.get_current_active_superuser),
 ) -> Any:
     """
@@ -116,6 +133,16 @@ def update_user(
             status_code=404,
             detail="The user with this username does not exist in the system",
         )
+
+    # Create user_in object from form fields
+    user_in = schemas.UserUpdate(
+        email=email,
+        password=password,
+        full_name=full_name,
+        company_id=company_id,
+        is_superuser=is_superuser,
+    )
+
     user = crud.user.update(db, db_obj=user, obj_in=user_in)
     return user
 

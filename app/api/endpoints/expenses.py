@@ -1,9 +1,9 @@
-from typing import Any, List
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 import os
-from datetime import datetime
+from datetime import datetime, date
 
 from app import crud, models, schemas
 from app.api import deps
@@ -33,13 +33,38 @@ def read_expenses(
 async def create_expense(
     *,
     db: Session = Depends(deps.get_db),
-    expense_in: schemas.ExpenseCreate,
-    receipt: UploadFile = File(None),
+    description: str = Form(...),
+    category: schemas.ExpenseCategoryEnum = Form(...),
+    amount: float = Form(...),
+    date: date = Form(...),
+    project_id: int = Form(...),
+    property_id: Optional[int] = Form(None),
+    supplier_name: Optional[str] = Form(None),
+    supplier_document: Optional[str] = Form(None),
+    supplier_contact: Optional[str] = Form(None),
+    receipt_description: Optional[str] = Form(None),
+    notes: Optional[str] = Form(None),
+    receipt: Optional[UploadFile] = File(None),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
     Create new expense.
     """
+    # Create expense_in object from form fields
+    expense_in = schemas.ExpenseCreate(
+        description=description,
+        category=category,
+        amount=amount,
+        date=date,
+        project_id=project_id,
+        property_id=property_id,
+        supplier_name=supplier_name,
+        supplier_document=supplier_document,
+        supplier_contact=supplier_contact,
+        receipt_description=receipt_description,
+        notes=notes,
+    )
+
     # Verify project exists
     project = crud.project.get(db, id=expense_in.project_id)
     if not project:
@@ -117,8 +142,18 @@ async def update_expense(
     *,
     db: Session = Depends(deps.get_db),
     expense_id: int,
-    expense_in: schemas.ExpenseUpdate,
-    receipt: UploadFile = File(None),
+    description: Optional[str] = Form(None),
+    category: Optional[schemas.ExpenseCategoryEnum] = Form(None),
+    amount: Optional[float] = Form(None),
+    date: Optional[date] = Form(None),
+    project_id: Optional[int] = Form(None),
+    property_id: Optional[int] = Form(None),
+    supplier_name: Optional[str] = Form(None),
+    supplier_document: Optional[str] = Form(None),
+    supplier_contact: Optional[str] = Form(None),
+    receipt_description: Optional[str] = Form(None),
+    notes: Optional[str] = Form(None),
+    receipt: Optional[UploadFile] = File(None),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
@@ -136,6 +171,21 @@ async def update_expense(
     # Check if user has permission to update this expense
     if not crud.user.is_superuser(current_user) and project.company_id != current_user.company_id:
         raise HTTPException(status_code=400, detail="Not enough permissions")
+    
+    # Create expense_in object from form fields
+    expense_in = schemas.ExpenseUpdate(
+        description=description,
+        category=category,
+        amount=amount,
+        date=date,
+        project_id=project_id,
+        property_id=property_id,
+        supplier_name=supplier_name,
+        supplier_document=supplier_document,
+        supplier_contact=supplier_contact,
+        receipt_description=receipt_description,
+        notes=notes,
+    )
     
     # If changing project, verify new project exists and user has permission
     if expense_in.project_id and expense_in.project_id != expense.project_id:

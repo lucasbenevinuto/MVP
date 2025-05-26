@@ -1,6 +1,6 @@
-from typing import Any, List
+from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Form
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
@@ -31,12 +31,23 @@ def read_teams(
 def create_team(
     *,
     db: Session = Depends(deps.get_db),
-    team_in: schemas.TeamCreate,
+    name: str = Form(...),
+    description: Optional[str] = Form(None),
+    company_id: int = Form(...),
+    manager_id: int = Form(...),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
     Create new team.
     """
+    # Create team_in object from form fields
+    team_in = schemas.TeamCreate(
+        name=name,
+        description=description,
+        company_id=company_id,
+        manager_id=manager_id,
+    )
+
     # Check if user has permission to create team for this company
     if not crud.user.is_superuser(current_user) and current_user.company_id != team_in.company_id:
         raise HTTPException(status_code=400, detail="Not enough permissions")
@@ -84,7 +95,9 @@ def update_team(
     *,
     db: Session = Depends(deps.get_db),
     team_id: int,
-    team_in: schemas.TeamUpdate,
+    name: Optional[str] = Form(None),
+    description: Optional[str] = Form(None),
+    manager_id: Optional[int] = Form(None),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
@@ -97,6 +110,13 @@ def update_team(
     # Check if user has permission to update this team
     if not crud.user.is_superuser(current_user) and team.company_id != current_user.company_id:
         raise HTTPException(status_code=400, detail="Not enough permissions")
+    
+    # Create team_in object from form fields
+    team_in = schemas.TeamUpdate(
+        name=name,
+        description=description,
+        manager_id=manager_id,
+    )
     
     # If changing manager, verify new manager exists
     if team_in.manager_id and team_in.manager_id != team.manager_id:
@@ -160,7 +180,8 @@ def add_team_member(
     *,
     db: Session = Depends(deps.get_db),
     team_id: int,
-    user_team_in: schemas.UserTeamCreate,
+    user_id: int = Form(...),
+    role: Optional[str] = Form(None),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
@@ -173,6 +194,13 @@ def add_team_member(
     # Check if user has permission to update this team
     if not crud.user.is_superuser(current_user) and team.company_id != current_user.company_id:
         raise HTTPException(status_code=400, detail="Not enough permissions")
+    
+    # Create user_team_in object from form fields
+    user_team_in = schemas.UserTeamCreate(
+        user_id=user_id,
+        team_id=team_id,
+        role=role,
+    )
     
     # Verify user exists and belongs to same company
     user = crud.user.get(db, id=user_team_in.user_id)

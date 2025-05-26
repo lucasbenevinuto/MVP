@@ -1,6 +1,6 @@
-from typing import Any, List
+from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Form
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
@@ -31,12 +31,37 @@ def read_clients(
 def create_client(
     *,
     db: Session = Depends(deps.get_db),
-    client_in: schemas.ClientCreate,
+    name: str = Form(...),
+    client_type: schemas.ClientTypeEnum = Form(...),
+    document: str = Form(...),
+    email: str = Form(...),
+    phone: str = Form(...),
+    address: Optional[str] = Form(None),
+    city: Optional[str] = Form(None),
+    state: Optional[str] = Form(None),
+    zip_code: Optional[str] = Form(None),
+    notes: Optional[str] = Form(None),
+    company_id: int = Form(...),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
     Create new client.
     """
+    # Create client_in object from form fields
+    client_in = schemas.ClientCreate(
+        name=name,
+        client_type=client_type,
+        document=document,
+        email=email,
+        phone=phone,
+        address=address,
+        city=city,
+        state=state,
+        zip_code=zip_code,
+        notes=notes,
+        company_id=company_id,
+    )
+
     # Check if user has permission to create client for this company
     if not crud.user.is_superuser(current_user) and current_user.company_id != client_in.company_id:
         raise HTTPException(status_code=400, detail="Not enough permissions")
@@ -79,7 +104,16 @@ def update_client(
     *,
     db: Session = Depends(deps.get_db),
     client_id: int,
-    client_in: schemas.ClientUpdate,
+    name: Optional[str] = Form(None),
+    client_type: Optional[schemas.ClientTypeEnum] = Form(None),
+    document: Optional[str] = Form(None),
+    email: Optional[str] = Form(None),
+    phone: Optional[str] = Form(None),
+    address: Optional[str] = Form(None),
+    city: Optional[str] = Form(None),
+    state: Optional[str] = Form(None),
+    zip_code: Optional[str] = Form(None),
+    notes: Optional[str] = Form(None),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
@@ -92,6 +126,20 @@ def update_client(
     # Check if user has permission to update this client
     if not crud.user.is_superuser(current_user) and client.company_id != current_user.company_id:
         raise HTTPException(status_code=400, detail="Not enough permissions")
+    
+    # Create client_in object from form fields
+    client_in = schemas.ClientUpdate(
+        name=name,
+        client_type=client_type,
+        document=document,
+        email=email,
+        phone=phone,
+        address=address,
+        city=city,
+        state=state,
+        zip_code=zip_code,
+        notes=notes,
+    )
     
     # Check if updating to a document that already exists
     if client_in.document and client_in.document != client.document:
