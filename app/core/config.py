@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     
     # Database
     DATABASE_URL: str = Field(
-        default=os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/mvp_db"), 
+        default=os.getenv("DATABASE_URL"), 
         description="Database connection string"
     )
     
@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     
     # JWT
     SECRET_KEY: str = Field(
-        default=os.getenv("SECRET_KEY", "your-secret-key-here"), 
+        default=os.getenv("SECRET_KEY"), 
         description="Secret key for JWT token"
     )
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
